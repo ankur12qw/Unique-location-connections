@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Router Location Connections</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    #output { white-space: pre-line; }
+  </style>
+</head>
+<body>
+  <h1>Router Location Connections</h1>
+  <button id="loadBtn">Load Connections</button>
+  <div id="output"></div>
+
+  <script>
+    const API_URL = "https://my-json-server.typicode.com/marcuzh/router_location_test_api/db";
+
+    async function loadConnections() {
+      const outputEl = document.getElementById('output');
+      outputEl.textContent = "Loading...";
+
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+        const data = await response.json();
+
+        // Your exact logic starts here
+
+        const routerToLocation = {};
+        data.routers.forEach(router => {
+          routerToLocation[router.id] = router.location_id;
+        });
+
+        const locationIdToName = {};
+        data.locations.forEach(location => {
+          locationIdToName[location.id] = location.name;
+        });
+
+        const locationConnections = new Set();
+
+        data.routers.forEach(router => {
+          const sourceRouterId = router.id;
+          const sourceLocationId = router.location_id;
+          const sourceLocationName = locationIdToName[sourceLocationId];
+
+          router.router_links.forEach(linkedRouterId => {
+            const targetLocationId = routerToLocation[linkedRouterId];
+            const targetLocationName = locationIdToName[targetLocationId];
+
+            if (sourceLocationId !== targetLocationId) {
+              // Create a sorted pair to avoid duplicates like A <-> B and B <-> A
+              const pair = [sourceLocationName, targetLocationName].sort();
+              locationConnections.add(pair.join(' <-> '));
+            }
+          });
+        });
+
+        // Your exact logic ends here
+
+        if (locationConnections.size === 0) {
+          outputEl.textContent = "No cross-location connections found.";
+          return;
+        }
+
+        outputEl.textContent = [...locationConnections].join('\n');
+
+      } catch (error) {
+        outputEl.textContent = "Error loading data: " + error.message;
+      }
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', loadConnections);
+  </script>
+</body>
+</html>
