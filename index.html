@@ -14,29 +14,33 @@
   <div id="output"></div>
 
   <script>
-    const API_URL = "https://my-json-server.typicode.com/marcuzh/router_location_test_api/db";
+    const APIURL = "https://my-json-server.typicode.com/marcuzh/router_location_test_api/db";
 
     async function loadConnections() {
       const outputEl = document.getElementById('output');
       outputEl.textContent = "Loading...";
 
       try {
-        const response = await fetch(API_URL);
+        const response = await fetch(APIURL);
         if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
         const data = await response.json();
 
-        // Your exact logic starts here
+        // Mapping router ID to its location ID
 
         const routerToLocation = {};
         data.routers.forEach(router => {
           routerToLocation[router.id] = router.location_id;
         });
-
+        
+        // Mapping location ID to its name
+        
         const locationIdToName = {};
         data.locations.forEach(location => {
           locationIdToName[location.id] = location.name;
         });
 
+       // Creating a Set which is unique location-level connections
+        
         const locationConnections = new Set();
 
         data.routers.forEach(router => {
@@ -49,17 +53,18 @@
             const targetLocationName = locationIdToName[targetLocationId];
 
             if (sourceLocationId !== targetLocationId) {
-              // Create a sorted pair to avoid duplicates like A <-> B and B <-> A
+              
+              // Creating a sorted pair to avoid duplicates like A <-> B and B <-> A
+        
               const pair = [sourceLocationName, targetLocationName].sort();
               locationConnections.add(pair.join(' <-> '));
             }
           });
         });
 
-        // Your exact logic ends here
 
         if (locationConnections.size === 0) {
-          outputEl.textContent = "No cross-location connections found.";
+          outputEl.textContent = "No cross-location connection data found.";
           return;
         }
 
